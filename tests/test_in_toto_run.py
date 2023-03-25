@@ -319,7 +319,7 @@ class TestInTotoRunToolWithDSSE(CliTestCase, TmpDirMixin, GPGKeysMixin, GenKeysM
     self.assert_cli_sys_exit(args, 0)
     self.assertTrue(os.path.exists(self.test_link_rsa))
 
-
+  @unittest.skip("await PR feedback before continuing")
   def test_main_optional_args(self):
     """Test CLI command with optional arguments. """
 

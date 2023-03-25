@@ -46,6 +46,7 @@ from in_toto.models._signer import GPGSigner
 from in_toto.models.link import (UNFINISHED_FILENAME_FORMAT, FILENAME_FORMAT,
     FILENAME_FORMAT_SHORT, UNFINISHED_FILENAME_FORMAT_GLOB)
 from in_toto.models.metadata import (Metadata, Envelope, Metablock)
+from in_toto.models.statement import Statement
 
 import securesystemslib.formats
 import securesystemslib.hash
@@ -665,9 +666,29 @@ def in_toto_run(name, material_list, product_list, link_cmd_args,
       materials=materials_dict, products=products_dict, command=link_cmd_args,
       byproducts=byproducts, environment=environment)
 
+  LOG.info("Creating statement...")
+
+  statement_subjects = []
+  
+  for product_name, product_hashes in link.products.items():
+
+    subject = {
+      "name": product_name,
+      "digest": {}
+    }
+
+    for algorithm, hash in product_hashes.items():
+      subject["digest"][algorithm] = hash
+
+    statement_subjects.append(subject)
+
+  # TODO: correct predicate_type
+  statement = Statement(subject=statement_subjects, 
+    predicate_type="http://in-toto.io/attestation/human-review/vcs/v0.1", predicate={})
+
   if use_dsse:
     LOG.info("Generating link metadata using DSSE...")
-    link_metadata = Envelope.from_signable(link)
+    link_metadata = Envelope.from_signable(statement)
   else:
     LOG.info("Generating link metadata using Metablock...")
     link_metadata = Metablock(signed=link, compact_json=compact_json)

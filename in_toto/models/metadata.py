@@ -39,6 +39,7 @@ from in_toto.models._signer import GPGSigner
 from in_toto.models.common import Signable, ValidationMixin
 from in_toto.models.link import Link
 from in_toto.models.layout import Layout
+from in_toto.models.statement import Statement, STATEMENT_TYPE
 
 
 ENVELOPE_PAYLOAD_TYPE = "application/vnd.in-toto+json"
@@ -189,6 +190,8 @@ class Envelope(SSlibEnvelope, Metadata):
       return Link.read(data)
     if _type == "layout":
       return Layout.read(data)
+    if _type == STATEMENT_TYPE:
+      return Statement.read(data)
 
     raise InvalidMetadata
 
