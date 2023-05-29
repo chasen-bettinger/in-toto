@@ -39,7 +39,7 @@ from in_toto.common_args import (EXCLUDE_ARGS, EXCLUDE_KWARGS, BASE_PATH_ARGS,
     QUIET_KWARGS, METADATA_DIRECTORY_ARGS, METADATA_DIRECTORY_KWARGS,
     KEY_PASSWORD_ARGS, KEY_PASSWORD_KWARGS, parse_password_and_prompt_args,
     sort_action_groups, title_case_action_groups, OPTS_TITLE, DSSE_ARGS,
-    DSSE_KWARGS,)
+    DSSE_KWARGS, PUBLIC_KEY_ARGS, PUBLIC_KEY_KWARGS)
 
 from securesystemslib import interface
 
@@ -158,6 +158,7 @@ e.g. 'document.pdf'.
   verbosity_args = parser.add_mutually_exclusive_group(required=False)
   verbosity_args.add_argument(*VERBOSE_ARGS, **VERBOSE_KWARGS)
   verbosity_args.add_argument(*QUIET_ARGS, **QUIET_KWARGS)
+  verbosity_args.add_argument(*PUBLIC_KEY_ARGS, **PUBLIC_KEY_KWARGS)
 
 
   # FIXME: This is not yet ideal.
@@ -192,6 +193,10 @@ def main():
     parser.print_usage()
     parser.error("Specify either '--key <key path>' or '--gpg [<keyid>]'")
 
+  # if args.key is not None and args.pub_key is None:
+  #   parser.print_usage()
+  #   parser.error("Specify public key with '--pub-key <key path>'")
+
   password, prompt = parse_password_and_prompt_args(args)
 
   # If `--gpg` was set without argument it has the value `True` and
@@ -223,7 +228,7 @@ def main():
     runlib.in_toto_run(
         args.step_name, args.materials, args.products, args.link_cmd,
         record_streams=args.record_streams, signing_key=key,
-        gpg_keyid=gpg_keyid, gpg_use_default=gpg_use_default,
+        public_key=args.pub_key, gpg_keyid=gpg_keyid, gpg_use_default=gpg_use_default,
         gpg_home=args.gpg_home, exclude_patterns=args.exclude_patterns,
         base_path=args.base_path, lstrip_paths=args.lstrip_paths,
         metadata_directory=args.metadata_directory, use_dsse=args.use_dsse)

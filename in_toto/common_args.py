@@ -103,6 +103,15 @@ KEY_PASSWORD_KWARGS = {
            " entered on the prompt, the key is treated as unencrypted. (Do "
            " not confuse with '-p/--products'!)")
 }
+
+PUBLIC_KEY_ARGS = ["--pub-key"]
+PUBLIC_KEY_KWARGS = {
+  "dest": "pub_key",
+  "type": str,
+  "help": ("key that is the public portion of the private key specified with"
+          " -k/--key.")
+}
+
 OPTS_TITLE = "Optional Arguments" if sys.version_info < (3, 10) else "Options"
 def parse_password_and_prompt_args(args):
   """Parse -P/--password optional arg (nargs=?, const=True). """
@@ -169,6 +178,7 @@ DSSE_KWARGS = {
   "action": "store_true",
   "help": ("generate metadata using dsse (experimental)."),
 }
+
 
 
 def title_case_action_groups(parser):

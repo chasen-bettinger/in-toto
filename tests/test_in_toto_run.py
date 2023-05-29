@@ -211,7 +211,6 @@ class TestInTotoRunTool(CliTestCase, TmpDirMixin, GPGKeysMixin, GenKeysMixin):
 
     self.assertTrue(os.path.exists(link_filename))
 
-
   def test_main_with_default_gpg_key(self):
     """Test CLI command with default gpg key. """
     args = ["-n", self.test_step,

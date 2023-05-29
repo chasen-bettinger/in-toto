@@ -51,7 +51,7 @@ import securesystemslib.formats
 import securesystemslib.hash
 import securesystemslib.exceptions
 import securesystemslib.gpg
-from securesystemslib.signer import SSlibSigner, Signature
+from securesystemslib.signer import Signer, SSlibSigner, Signature
 
 
 
@@ -511,10 +511,29 @@ def _check_match_signing_key(signing_key):
   if not signing_key["keyval"].get("private"):
     raise securesystemslib.exceptions.FormatError(
         "Signing key needs to be a private key.")
+  
+def _get_signer(signing_key=None, public_key=None, gpg_keyid=None, 
+    gpg_use_default=False, gpg_home=None):
+  
+  signer = None
+
+  if signing_key:
+    LOG.info("Signing link metadata using passed key...")
+    signer = Signer.from_priv_key_uri(priv_key_uri=signing_key, public_key=public_key)
+
+  elif gpg_keyid:
+    LOG.info("Signing link metadata using passed GPG keyid...")
+    signer = GPGSigner(keyid=gpg_keyid, homedir=gpg_home)
+
+  elif gpg_use_default:
+    LOG.info("Signing link metadata using default GPG key ...")
+    signer = GPGSigner(keyid=None, homedir=gpg_home)
+
+  return signer
 
 
 def in_toto_run(name, material_list, product_list, link_cmd_args,
-    record_streams=False, signing_key=None, gpg_keyid=None,
+    record_streams=False, signing_key=None, public_key=None, gpg_keyid=None,
     gpg_use_default=False, gpg_home=None, exclude_patterns=None,
     base_path=None, compact_json=False, record_environment=False,
     normalize_line_endings=False, lstrip_paths=None, metadata_directory=None,
@@ -672,18 +691,8 @@ def in_toto_run(name, material_list, product_list, link_cmd_args,
     LOG.info("Generating link metadata using Metablock...")
     link_metadata = Metablock(signed=link, compact_json=compact_json)
 
-  signer = None
-  if signing_key:
-    LOG.info("Signing link metadata using passed key...")
-    signer = SSlibSigner(signing_key)
-
-  elif gpg_keyid:
-    LOG.info("Signing link metadata using passed GPG keyid...")
-    signer = GPGSigner(keyid=gpg_keyid, homedir=gpg_home)
-
-  elif gpg_use_default:
-    LOG.info("Signing link metadata using default GPG key ...")
-    signer = GPGSigner(keyid=None, homedir=gpg_home)
+  signer = _get_signer(signing_key=signing_key, public_key=public_key, gpg_keyid=gpg_keyid, 
+    gpg_use_default=gpg_use_default, gpg_home=gpg_home)
 
   # We need the signature's keyid to write the link to keyid infix'ed filename
   if signer:
@@ -827,17 +836,8 @@ def in_toto_record_start(step_name, material_list, signing_key=None,
     LOG.info("Generating link metadata using Metablock...")
     link_metadata = Metablock(signed=link)
 
-  if signing_key:
-    LOG.info("Signing link metadata using passed key...")
-    signer = SSlibSigner(signing_key)
-
-  elif gpg_keyid:
-    LOG.info("Signing link metadata using passed GPG keyid...")
-    signer = GPGSigner(keyid=gpg_keyid, homedir=gpg_home)
-
-  else:  # (gpg_use_default)
-    LOG.info("Signing link metadata using default GPG key ...")
-    signer = GPGSigner(keyid=None, homedir=gpg_home)
+  signer = _get_signer(signing_key=signing_key, gpg_keyid=gpg_keyid, 
+    gpg_use_default=gpg_use_default, gpg_home=gpg_home)
 
   signature = link_metadata.create_signature(signer)
   # We need the signature's keyid to write the link to keyid infix'ed filename
@@ -851,7 +851,7 @@ def in_toto_record_start(step_name, material_list, signing_key=None,
   link_metadata.dump(unfinished_fn)
 
 
-
+# TODO: pass in Key=
 def in_toto_record_stop(step_name, product_list, signing_key=None,
     gpg_keyid=None, gpg_use_default=False, gpg_home=None,
     exclude_patterns=None, base_path=None, normalize_line_endings=False,
@@ -1036,7 +1036,7 @@ def in_toto_record_stop(step_name, product_list, signing_key=None,
     gpg_pubkey = securesystemslib.gpg.functions.export_pubkey(
         keyid, gpg_home)
     verification_key = gpg_pubkey
-
+  
   link_metadata.verify_signature(verification_key)
 
   LOG.info("Extracting Link from metadata...")
